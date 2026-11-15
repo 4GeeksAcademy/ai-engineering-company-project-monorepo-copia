@@ -23,5 +23,5 @@ app.add_middleware(
 app.include_router(suppliers_router)
 
 @app.get("/")
-def read_root():
+def read_root() -> dict:
     return {"message": "Bienvenido a la API de HealthCore. Ve a /docs para ver la documentación."}
