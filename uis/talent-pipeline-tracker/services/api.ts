@@ -30,7 +30,7 @@ async function readErrorMessage(response: Response): Promise<string> {
       }
     }
   } catch {
-    // La respuesta no traía JSON: usamos el mensaje genérico de abajo.
+    // La respuesta no traía JSON
   }
   return `La API respondió con un error (código ${response.status})`;
 }
@@ -84,7 +84,30 @@ export async function getAllCandidates(): Promise<Candidate[]> {
 }
 
 export async function getCandidateById(id: string): Promise<Candidate> {
-  return request<Candidate>(`/records/${encodeURIComponent(id)}`);
+  const candidate = await request<Candidate>(`/records/${encodeURIComponent(id)}`);
+  
+  // Si las notas no son un array válido, las pedimos explícitamente
+  if (!candidate.notes || !Array.isArray(candidate.notes)) {
+    const notesResponse = await request<unknown>(`/records/${encodeURIComponent(id)}/notes`);
+    
+    let notesArray: Note[] = [];
+    if (Array.isArray(notesResponse)) {
+      // Si la API devuelve un array directo
+      notesArray = notesResponse;
+    } else if (
+      notesResponse && 
+      typeof notesResponse === "object" && 
+      "data" in notesResponse && 
+      Array.isArray((notesResponse as any).data)
+    ) {
+      // Si la API devuelve un objeto paginado { data: [...] }
+      notesArray = (notesResponse as any).data;
+    }
+      
+    return { ...candidate, notes: notesArray };
+  }
+  
+  return candidate;
 }
 
 export async function createCandidate(input: CandidateInput): Promise<Candidate> {

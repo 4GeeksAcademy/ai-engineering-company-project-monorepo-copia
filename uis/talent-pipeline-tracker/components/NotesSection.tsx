@@ -63,8 +63,9 @@ export function NotesSection({ candidateId, notes, onChanged }: NotesSectionProp
     }
   }
 
-  // El paracaídas: si notes es null o undefined, usamos un arreglo vacío []
-  const newestFirst = [...(notes || [])].sort((a, b) =>
+  // Nos aseguramos de que siempre sea un array para no romper la pantalla
+  const safeNotes = Array.isArray(notes) ? notes : [];
+  const newestFirst = [...safeNotes].sort((a, b) =>
     b.created_at.localeCompare(a.created_at)
   );
 
