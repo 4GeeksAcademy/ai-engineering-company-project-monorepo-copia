@@ -8,8 +8,7 @@ export function findClaimById(claims: Claim[], claimId: string): Claim | null {
 }
 
 export function findClinicianById(
-  cli
-  nicians: Clinician[],
+  clinicians: Clinician[],
   clinicianId: string
 ): Clinician | null {
   for (const clinician of clinicians) {
