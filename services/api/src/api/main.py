@@ -21,3 +21,8 @@ app.include_router(users_router)
 app.include_router(profiles_router)
 app.include_router(records_router)
 app.include_router(incidents_router)
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}
