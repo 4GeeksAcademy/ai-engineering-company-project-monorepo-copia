@@ -72,3 +72,6 @@
 
 ### Pendiente
 - HTTPS/transporte: pendiente hasta el despliegue y la aprobación de Cumplimiento.
+
+### Hecho después (mismo día)
+- HTTPS documentado como requisito explícito en `services/api/README.md` y `docs/ARQUITECTURA_PROPUESTA.md` (punto 5 de decisiones técnicas).
