@@ -75,3 +75,6 @@
 
 ### Hecho después (mismo día)
 - HTTPS documentado como requisito explícito en `services/api/README.md` y `docs/ARQUITECTURA_PROPUESTA.md` (punto 5 de decisiones técnicas).
+- `services/api/.env` y `services/api/db.json` dejan de estar en Git (ya estaban en `.gitignore`); se conservan en local. `SECRET_KEY` rotada (la anterior estaba versionada).
+- Restaurados los `.pyc` trackeados que Python modificaba.
+- Registrado un usuario de prueba en la base local y verificado el login.
