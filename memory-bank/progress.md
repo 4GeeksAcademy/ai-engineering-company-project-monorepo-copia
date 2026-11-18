@@ -78,3 +78,4 @@
 - `services/api/.env` y `services/api/db.json` dejan de estar en Git (ya estaban en `.gitignore`); se conservan en local. `SECRET_KEY` rotada (la anterior estaba versionada).
 - Restaurados los `.pyc` trackeados que Python modificaba.
 - Registrado un usuario de prueba en la base local y verificado el login.
+- Prueba manual en backoffice (localhost:3000): login correcto y análisis de `scripts/incidents-HEALTHCORE.csv` con 100 registros leídos, 100 válidos, 0 inválidos.
