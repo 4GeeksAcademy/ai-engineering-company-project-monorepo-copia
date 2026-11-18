@@ -50,3 +50,20 @@
 - Incluir enlace a AGENTS.md en descripción de PR
 - Completar review y merge a main
 - Comenzar con desarrollo de features específicas de HealthCore
+
+## Fecha: 18 de Noviembre, 2026 (rama feature/agent-memory-bank-v2)
+
+### Completado
+- Controles de seguridad aprobados por el desarrollador, implementados en `services/api`:
+  - `/api/incidents/analyze` y `/api/incidents/results/export` exigen token JWT Bearer (401 sin token).
+  - Módulo `core/audit.py`: escribe `audit.log` (JSON por línea) con login, análisis y exportación; sin contraseñas, tokens ni contenido de CSV.
+  - Login registra éxito y fallo (sin email intentado).
+  - `audit.log` añadido a `.gitignore`; README actualizado con token y auditoría.
+- Verificación HTTP en copia temporal: 401 sin token, 200 con token, 404 export sin análisis, `/records` protegido, auditoría correcta, sin trazas en servidor.
+- Rama nueva `feature/agent-memory-bank-v2` desde `main`; la rama antigua `feature/agent-memory-bank` no se modificó.
+
+### Pendiente
+- El frontend `uis/backoffice` no envía token: sus llamadas a `/api/incidents` devolverán 401 hasta añadir login.
+- Autorización por rol y HTTPS/transporte: no implementados.
+- Los 401 de rutas protegidas no se auditan (la dependencia rechaza antes del handler).
+- Catálogo oficial de categorías y valores de referencia.

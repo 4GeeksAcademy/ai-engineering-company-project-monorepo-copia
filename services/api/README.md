@@ -21,16 +21,25 @@ python -m uvicorn api.main:app --app-dir src --reload --host 127.0.0.1 --port 80
 
 La API queda disponible en `http://127.0.0.1:8000`; la documentación interactiva está en `http://127.0.0.1:8000/docs`. Para usarla desde `uis/backoffice`, inicia también el frontend en el puerto 3000. Su rewrite reenvía `/api/*` a la API.
 
+## Autenticación y auditoría
+
+- `POST /auth/login` (formulario `username`/`password`) devuelve un token JWT Bearer. Requiere `SECRET_KEY` en `.env`.
+- Los endpoints de incidencias y `/records/*` exigen `Authorization: Bearer <token>`; sin token o con token inválido responden 401.
+- Cada login y cada uso de incidencias se registra en `services/api/audit.log` (una línea JSON por evento: fecha, acción, resultado, id de usuario, IP y ruta). No se registran contraseñas, tokens ni contenido de los CSV. El fichero está en `.gitignore`.
+
 ## Endpoints de incidencias
+
+Requieren token Bearer.
 
 - `POST /api/incidents/analyze`: recibe `file` como `multipart/form-data` y devuelve el resumen JSON.
 - `GET /api/incidents/results/export`: descarga `resultados_healthcore.csv` con métricas agregadas del último análisis correcto del proceso.
 
-Ejemplo de prueba local:
+Ejemplo de prueba local (primero obtén el token con un usuario existente):
 
 ```bash
-curl -F "file=@../../scripts/incidents-HEALTHCORE.csv" http://127.0.0.1:8000/api/incidents/analyze
-curl -OJ http://127.0.0.1:8000/api/incidents/results/export
+TOKEN=$(curl -s -d "username=usuario@ejemplo.com&password=TU_CONTRASENA" http://127.0.0.1:8000/auth/login | python3 -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+curl -H "Authorization: Bearer $TOKEN" -F "file=@../../scripts/incidents-HEALTHCORE.csv" http://127.0.0.1:8000/api/incidents/analyze
+curl -OJ -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/api/incidents/results/export
 ```
 
 Para analizar el CSV de 100 filas desde la línea de comandos, ejecuta desde la raíz del repositorio `scripts/analizar-datos-prueba.sh`. Si respondes `s` al preguntar por la exportación, el resultado se guarda en `results.csv` en el directorio actual.
@@ -41,4 +50,4 @@ Los datos originales del fichero no se guardan ni se incluyen en el CSV exportad
 
 `scripts/incidents-HEALTHCORE.csv` y `scripts/incidents-HEALTHCORE-datos-prueba.csv` contienen los mismos 100 registros de prueba. El briefing de HealthCore no define un catálogo de categorías ni valores esperados para incidencias; por ahora, las categorías válidas se toman de las cinco categorías presentes en los CSV. Confirma ese catálogo y los valores de referencia antes de usar datos de producción.
 
-Este prototipo no implementa autenticación, autorización ni auditoría de acceso. Mantén el backend ligado a `127.0.0.1` y no lo expongas ni proceses datos reales sensibles hasta integrar esos controles y el transporte/despliegue aprobados por Cumplimiento.
+El acceso requiere autenticación JWT y queda auditado; la autorización por rol y el transporte cifrado (HTTPS) aún no están implementados. Mantén el backend ligado a `127.0.0.1` y no lo expongas ni proceses datos reales sensibles hasta integrar esos controles y el transporte/despliegue aprobados por Cumplimiento.
