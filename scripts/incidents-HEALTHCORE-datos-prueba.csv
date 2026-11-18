@@ -1,0 +1,101 @@
+id_incidencia,departamento,categoria,estado,satisfaccion
+1,Operaciones Clinicas,Documentacion,cerrado,5
+2,Experiencia del Paciente,Citas,abierto,
+3,Facturacion,Rechazo de reclamos,cerrado,3
+4,Tecnologia,Fallo de sistema,descartado,
+5,Recursos Humanos,Onboarding,abierto,4
+6,Experiencia del Paciente,Citas,abierto,
+7,Facturacion,Rechazo de reclamos,cerrado,3
+8,Tecnologia,Fallo de sistema,descartado,
+9,Recursos Humanos,Onboarding,abierto,
+10,Operaciones Clinicas,Documentacion,cerrado,1
+11,Experiencia del Paciente,Citas,descartado,
+12,Facturacion,Rechazo de reclamos,abierto,
+13,Tecnologia,Fallo de sistema,cerrado,4
+14,Recursos Humanos,Onboarding,descartado,
+15,Operaciones Clinicas,Documentacion,abierto,
+16,Experiencia del Paciente,Citas,cerrado,2
+17,Facturacion,Rechazo de reclamos,descartado,
+18,Tecnologia,Fallo de sistema,abierto,
+19,Recursos Humanos,Onboarding,cerrado,5
+20,Operaciones Clinicas,Documentacion,descartado,
+21,Experiencia del Paciente,Citas,abierto,
+22,Facturacion,Rechazo de reclamos,cerrado,3
+23,Tecnologia,Fallo de sistema,descartado,
+24,Recursos Humanos,Onboarding,abierto,
+25,Operaciones Clinicas,Documentacion,cerrado,1
+26,Experiencia del Paciente,Citas,descartado,
+27,Facturacion,Rechazo de reclamos,abierto,
+28,Tecnologia,Fallo de sistema,cerrado,4
+29,Recursos Humanos,Onboarding,descartado,
+30,Operaciones Clinicas,Documentacion,abierto,
+31,Experiencia del Paciente,Citas,cerrado,2
+32,Facturacion,Rechazo de reclamos,descartado,
+33,Tecnologia,Fallo de sistema,abierto,
+34,Recursos Humanos,Onboarding,cerrado,5
+35,Operaciones Clinicas,Documentacion,descartado,
+36,Experiencia del Paciente,Citas,abierto,
+37,Facturacion,Rechazo de reclamos,cerrado,3
+38,Tecnologia,Fallo de sistema,descartado,
+39,Recursos Humanos,Onboarding,abierto,
+40,Operaciones Clinicas,Documentacion,cerrado,1
+41,Experiencia del Paciente,Citas,descartado,
+42,Facturacion,Rechazo de reclamos,abierto,
+43,Tecnologia,Fallo de sistema,cerrado,4
+44,Recursos Humanos,Onboarding,descartado,
+45,Operaciones Clinicas,Documentacion,abierto,
+46,Experiencia del Paciente,Citas,cerrado,2
+47,Facturacion,Rechazo de reclamos,descartado,
+48,Tecnologia,Fallo de sistema,abierto,
+49,Recursos Humanos,Onboarding,cerrado,5
+50,Operaciones Clinicas,Documentacion,descartado,
+51,Experiencia del Paciente,Citas,abierto,
+52,Facturacion,Rechazo de reclamos,cerrado,3
+53,Tecnologia,Fallo de sistema,descartado,
+54,Recursos Humanos,Onboarding,abierto,
+55,Operaciones Clinicas,Documentacion,cerrado,1
+56,Experiencia del Paciente,Citas,descartado,
+57,Facturacion,Rechazo de reclamos,abierto,
+58,Tecnologia,Fallo de sistema,cerrado,4
+59,Recursos Humanos,Onboarding,descartado,
+60,Operaciones Clinicas,Documentacion,abierto,
+61,Experiencia del Paciente,Citas,cerrado,2
+62,Facturacion,Rechazo de reclamos,descartado,
+63,Tecnologia,Fallo de sistema,abierto,
+64,Recursos Humanos,Onboarding,cerrado,5
+65,Operaciones Clinicas,Documentacion,descartado,
+66,Experiencia del Paciente,Citas,abierto,
+67,Facturacion,Rechazo de reclamos,cerrado,3
+68,Tecnologia,Fallo de sistema,descartado,
+69,Recursos Humanos,Onboarding,abierto,
+70,Operaciones Clinicas,Documentacion,cerrado,1
+71,Experiencia del Paciente,Citas,descartado,
+72,Facturacion,Rechazo de reclamos,abierto,
+73,Tecnologia,Fallo de sistema,cerrado,4
+74,Recursos Humanos,Onboarding,descartado,
+75,Operaciones Clinicas,Documentacion,abierto,
+76,Experiencia del Paciente,Citas,cerrado,2
+77,Facturacion,Rechazo de reclamos,descartado,
+78,Tecnologia,Fallo de sistema,abierto,
+79,Recursos Humanos,Onboarding,cerrado,5
+80,Operaciones Clinicas,Documentacion,descartado,
+81,Experiencia del Paciente,Citas,abierto,
+82,Facturacion,Rechazo de reclamos,cerrado,3
+83,Tecnologia,Fallo de sistema,descartado,
+84,Recursos Humanos,Onboarding,abierto,
+85,Operaciones Clinicas,Documentacion,cerrado,1
+86,Experiencia del Paciente,Citas,descartado,
+87,Facturacion,Rechazo de reclamos,abierto,
+88,Tecnologia,Fallo de sistema,cerrado,4
+89,Recursos Humanos,Onboarding,descartado,
+90,Operaciones Clinicas,Documentacion,abierto,
+91,Experiencia del Paciente,Citas,cerrado,2
+92,Facturacion,Rechazo de reclamos,descartado,
+93,Tecnologia,Fallo de sistema,abierto,
+94,Recursos Humanos,Onboarding,cerrado,5
+95,Operaciones Clinicas,Documentacion,descartado,
+96,Experiencia del Paciente,Citas,abierto,
+97,Facturacion,Rechazo de reclamos,cerrado,3
+98,Tecnologia,Fallo de sistema,descartado,
+99,Recursos Humanos,Onboarding,abierto,
+100,Operaciones Clinicas,Documentacion,cerrado,1

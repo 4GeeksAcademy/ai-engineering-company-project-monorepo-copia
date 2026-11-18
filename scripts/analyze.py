@@ -1,61 +1,70 @@
-import pandas as pd
+import argparse
 import sys
+from pathlib import Path
 
-# 1. Recibimos el archivo desde la terminal
-ruta_archivo = sys.argv[1]
 
-try:
-    # Leemos el archivo CSV
-    datos = pd.read_csv(ruta_archivo)
-    print("¡Archivo leído con éxito! 🎉\n")
+API_SOURCE = Path(__file__).resolve().parents[1] / "services" / "api" / "src"
+sys.path.insert(0, str(API_SOURCE))
 
-    # 2. Definimos las reglas (según el Briefing)
-    estados_validos = ['abierto', 'cerrado', 'descartado']
-    columnas_obligatorias = ['id_incidencia', 'departamento', 'categoria', 'estado']
+from api.incidents.analysis import CSVAnalysisError, AnalysisResult, analyze_csv
 
-    # 3. Buscamos errores (Registros inválidos)
-    registros_invalidos = datos[
-        datos[columnas_obligatorias].isnull().any(axis=1) | # Si falta un dato obligatorio
-        ~datos['estado'].isin(estados_validos)              # Si el estado no es válido
-    ]
-    
-    # Los válidos son el resto
-    registros_validos = datos.drop(registros_invalidos.index)
 
-    # 4. Mostramos el resumen
-    print(f"Total de incidencias procesadas: {len(datos)}")
-    print(f"✅ Incidencias válidas: {len(registros_validos)}")
-    print(f"❌ Incidencias inválidas: {len(registros_invalidos)}\n")
+def print_breakdown(title: str, values: dict[str, int]) -> None:
+    print(f"\n{title}")
+    if not values:
+        print("  Sin registros")
+        return
+    label_width = max(len(label) for label in values)
+    for label, count in values.items():
+        print(f"  {label:<{label_width}}  {count:>5}")
 
-    # Si hay inválidos, mostramos cuáles son
-    if len(registros_invalidos) > 0:
-        print("⚠️ Detalle de los registros inválidos:")
-        print(registros_invalidos)
-        print("\n")
 
-    # 5. Calculamos las métricas (solo con los válidos)
-    print("--- MÉTRICAS ---")
-    
-    # Total por categoría
-    print("\nTotal por categoría:")
-    print(registros_validos['categoria'].value_counts())
-    
-    # Total por estado
-    print("\nTotal por estado:")
-    print(registros_validos['estado'].value_counts())
-    
-    # Índice de satisfacción (solo de los que están 'cerrado')
-    cerrados = registros_validos[registros_validos['estado'] == 'cerrado']
-    if not cerrados.empty:
-        promedio_satisfaccion = cerrados['satisfaccion'].mean()
-        print(f"\nÍndice de satisfacción en casos cerrados: {promedio_satisfaccion:.2f} / 5")
+def print_summary(result: AnalysisResult) -> None:
+    print("=" * 64)
+    print("ANÁLISIS DE INCIDENCIAS · HEALTHCORE")
+    print("=" * 64)
+    print(f"Registros procesados : {result.total_processed}")
+    print(f"Registros válidos    : {result.valid_records}")
+    print(f"Registros inválidos  : {result.invalid_records}")
 
-    # 6. Preguntar si quiere exportar
-    respuesta = input("\n¿Deseas exportar los resultados a un CSV? (s / n): ")
-    if respuesta.lower() == 's':
-        # Aquí guardamos el archivo
-        registros_validos.to_csv('results.csv', index=False)
-        print("¡Archivo 'results.csv' guardado con éxito en tu carpeta! 📁")
+    if result.invalid_by_reason:
+        print_breakdown("Incidencias por tipo de problema:", result.invalid_by_reason)
+        print("\nFilas con problemas (sin mostrar datos personales):")
+        for invalid in result.invalid_record_details:
+            print(f"  Fila {invalid['row_number']}: {', '.join(invalid['reasons'])}")
 
-except Exception as e:
-    print(f"¡Ups! Hubo un error: {e}")
+    print_breakdown("Incidencias por categoría:", result.categories)
+    print_breakdown("Incidencias por estado:", result.states)
+    average = result.closed_case_satisfaction_avg
+    average_text = "Sin puntuaciones registradas" if average is None else f"{average:.2f} / 5"
+    print(f"\nSatisfacción media en casos cerrados: {average_text}")
+    print("=" * 64)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Valida y resume un CSV de incidencias HealthCore.")
+    parser.add_argument("csv_path", type=Path, help="Ruta al fichero CSV de incidencias")
+    args = parser.parse_args()
+
+    try:
+        result = analyze_csv(args.csv_path.read_bytes())
+    except OSError as error:
+        print(f"No se pudo leer el fichero: {error}", file=sys.stderr)
+        return 1
+    except CSVAnalysisError as error:
+        print(f"CSV no válido: {error}", file=sys.stderr)
+        return 1
+
+    print_summary(result)
+    try:
+        answer = input("\n¿Deseas exportar los resultados a CSV? [s / n]: ").strip().lower()
+    except EOFError:
+        answer = "n"
+    if answer == "s":
+        Path("results.csv").write_text(result.to_csv(), encoding="utf-8", newline="")
+        print("Resultados agregados guardados en results.csv.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
