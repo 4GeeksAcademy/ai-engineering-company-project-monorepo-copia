@@ -79,3 +79,4 @@
 - Restaurados los `.pyc` trackeados que Python modificaba.
 - Registrado un usuario de prueba en la base local y verificado el login.
 - Prueba manual en backoffice (localhost:3000): login correcto y análisis de `scripts/incidents-HEALTHCORE.csv` con 100 registros leídos, 100 válidos, 0 inválidos.
+- `POST /users` restringido a rol `admin` (router y README actualizados), aprobado por el desarrollador.
