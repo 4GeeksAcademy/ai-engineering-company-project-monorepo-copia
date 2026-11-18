@@ -2,54 +2,113 @@
 
 import { FormEvent, useState } from "react";
 
+type GroupStats = Record<string, { count: number; percentage: number }>;
+
 type AnalysisResult = {
-  total_processed: number;
+  total_records: number;
   valid_records: number;
   invalid_records: number;
-  invalid_by_reason: Record<string, number>;
-  invalid_record_details: { row_number: number; reasons: string[] }[];
-  categories: Record<string, number>;
-  states: Record<string, number>;
-  closed_case_satisfaction_avg: number | null;
+  invalid_by_rule: Record<string, number>;
+  categories: GroupStats;
+  statuses: GroupStats;
+  countries: GroupStats;
+  satisfaction: {
+    closed_cases: number;
+    scored_cases: number;
+    average_score: number | null;
+    score_distribution: Record<string, number>;
+  };
 };
 
-const formatNumber = new Intl.NumberFormat("es-ES");
+type Row = { label: string; count: number; percentage: number };
 
-function formatReason(reason: string): string {
-  if (reason.startsWith("missing_field:")) {
-    const field = reason.split(":")[1];
-    const fieldLabels: Record<string, string> = {
-      id_incidencia: "ID de incidencia",
-      departamento: "departamento",
-      categoria: "categoría",
-      estado: "estado",
-    };
-    return `Falta el campo ${fieldLabels[field] ?? field}`;
-  }
-  if (reason === "invalid_category") return "Categoría fuera del catálogo";
-  if (reason === "invalid_state") return "Estado fuera del catálogo";
-  if (reason === "malformed_row") return "Fila con columnas adicionales";
-  return reason;
+const formatNumber = new Intl.NumberFormat("es-ES");
+const formatPercent = new Intl.NumberFormat("es-ES", {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+const RULE_LABELS: Record<string, string> = {
+  missing_clinic_id: "clinic_id faltante o inválido",
+  country_mismatch: "País no coincide con la clínica",
+  missing_category: "Categoría faltante o inválida",
+  empty_description: "Descripción vacía o demasiado corta",
+  missing_patient_id: "Falta patient_id o formato incorrecto",
+  closed_without_score: "Caso cerrado sin puntaje de satisfacción",
+  score_out_of_range: "Puntaje fuera del rango 1–5",
+  unknown_status: "Estado vacío o no válido",
+  malformed_row: "Fila con columnas adicionales",
+};
+const REQUIRED_RULES = Object.keys(RULE_LABELS).slice(0, 7);
+
+const CATEGORY_LABELS: Record<string, string> = {
+  APPOINTMENT: "Citas",
+  BILLING: "Facturación",
+  CLINICAL_CARE: "Atención clínica",
+  ACCESSIBILITY: "Accesibilidad",
+  ADMINISTRATIVE: "Administrativo",
+};
+const STATUS_LABELS: Record<string, string> = {
+  OPEN: "Abierto",
+  CLOSED: "Cerrado",
+  DISCARDED: "Descartado",
+};
+const COUNTRY_LABELS: Record<string, string> = {
+  US: "Estados Unidos",
+  UK: "Reino Unido",
+};
+const SCORE_LABELS: Record<string, string> = {
+  "1": "Puntaje 1 · muy insatisfecho",
+  "2": "Puntaje 2 · insatisfecho",
+  "3": "Puntaje 3 · neutral",
+  "4": "Puntaje 4 · satisfecho",
+  "5": "Puntaje 5 · muy satisfecho",
+};
+
+function groupRows(values: GroupStats, labels: Record<string, string>): Row[] {
+  return Object.entries(values).map(([key, stat]) => ({
+    label: labels[key] ? `${labels[key]} (${key})` : key,
+    count: stat.count,
+    percentage: stat.percentage,
+  }));
 }
 
-function Breakdown({
+function scoreRows(distribution: Record<string, number>, scored: number): Row[] {
+  return Object.entries(distribution).map(([score, count]) => ({
+    label: SCORE_LABELS[score] ?? `Puntaje ${score}`,
+    count,
+    percentage: scored > 0 ? Math.round((count * 1000) / scored) / 10 : 0,
+  }));
+}
+
+function visibleRules(byRule: Record<string, number>): [string, number][] {
+  const ordered = Object.keys(RULE_LABELS);
+  const extras = Object.keys(byRule).filter((rule) => !ordered.includes(rule));
+  return [...ordered, ...extras]
+    .filter((rule) => REQUIRED_RULES.includes(rule) || (byRule[rule] ?? 0) > 0)
+    .map((rule) => [rule, byRule[rule] ?? 0]);
+}
+
+function BreakdownTable({
   title,
-  values,
+  rows,
   emptyLabel,
+  countHeader,
+  percentHeader,
 }: {
   title: string;
-  values: Record<string, number>;
+  rows: Row[];
   emptyLabel: string;
+  countHeader: string;
+  percentHeader: string;
 }) {
-  const entries = Object.entries(values);
-
   return (
     <section className="breakdown-section">
       <div className="section-heading">
         <h2>{title}</h2>
-        <span>{formatNumber.format(entries.length)} grupos</span>
+        <span>{formatNumber.format(rows.length)} grupos</span>
       </div>
-      {entries.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="empty-breakdown">{emptyLabel}</p>
       ) : (
         <div className="table-scroll">
@@ -57,14 +116,16 @@ function Breakdown({
             <thead>
               <tr>
                 <th scope="col">Nombre</th>
-                <th scope="col">Incidencias</th>
+                <th scope="col">{countHeader}</th>
+                <th scope="col">{percentHeader}</th>
               </tr>
             </thead>
             <tbody>
-              {entries.map(([label, count]) => (
-                <tr key={label}>
-                  <td>{label}</td>
-                  <td>{formatNumber.format(count)}</td>
+              {rows.map((row) => (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td>{formatNumber.format(row.count)}</td>
+                  <td>{formatPercent.format(row.percentage)} %</td>
                 </tr>
               ))}
             </tbody>
@@ -111,24 +172,29 @@ export default function IncidentsPage() {
   }
 
   async function handleExport() {
-    const response = await fetch("/api/incidents/results/export", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (response.status === 401) {
-      setLoginError("Tu sesión ha caducado. Vuelve a iniciar sesión.");
-      setToken("");
-      return;
+    setError("");
+    try {
+      const response = await fetch("/api/incidents/results/export", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.status === 401) {
+        setLoginError("Tu sesión ha caducado. Vuelve a iniciar sesión.");
+        setToken("");
+        return;
+      }
+      if (!response.ok) {
+        setError("No se pudo exportar el resultado.");
+        return;
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "resultados_healthcore.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("No se pudo conectar con el servicio de análisis.");
     }
-    if (!response.ok) {
-      setError("No se pudo exportar el resultado.");
-      return;
-    }
-    const url = URL.createObjectURL(await response.blob());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "resultados_healthcore.csv";
-    link.click();
-    URL.revokeObjectURL(url);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -154,9 +220,11 @@ export default function IncidentsPage() {
         setToken("");
         return;
       }
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(payload.detail ?? "No se pudo analizar el fichero.");
+        throw new Error(
+          typeof payload.detail === "string" ? payload.detail : "No se pudo analizar el fichero.",
+        );
       }
       setResult(payload as AnalysisResult);
     } catch (requestError) {
@@ -205,6 +273,8 @@ export default function IncidentsPage() {
     );
   }
 
+  const satisfaction = result?.satisfaction;
+
   return (
     <main className="workspace">
       <header className="topbar">
@@ -227,7 +297,7 @@ export default function IncidentsPage() {
           <div>
             <h1 id="page-title">Análisis de incidencias</h1>
             <p className="page-description">
-              Validación y resumen de registros operativos, procesados dentro de HealthCore.
+              Validación y resumen de reportes de pacientes, procesados dentro de HealthCore.
             </p>
           </div>
           <span className="privacy-tag"><span aria-hidden="true">●</span> Procesamiento interno</span>
@@ -239,7 +309,7 @@ export default function IncidentsPage() {
           <div className="panel-kicker"><span>01</span> NUEVO ANÁLISIS</div>
           <h2 id="upload-title">Cargar fichero</h2>
           <p className="upload-copy">
-            El CSV se analiza en el servicio interno. Los resultados exportables contienen métricas agregadas.
+            El CSV se analiza en el servicio interno. Los resultados exportables contienen solo métricas agregadas, sin identificadores de pacientes.
           </p>
           <form onSubmit={handleSubmit}>
             <label className="file-picker" htmlFor="incident-file">
@@ -274,7 +344,7 @@ export default function IncidentsPage() {
         </aside>
 
         <section className="results" aria-live="polite" aria-busy={isSubmitting}>
-          {result ? (
+          {result && satisfaction ? (
             <>
               <div className="results-header">
                 <div>
@@ -289,7 +359,7 @@ export default function IncidentsPage() {
               <div className="metric-grid">
                 <article className="metric metric-dark">
                   <span>PROCESADOS</span>
-                  <strong>{formatNumber.format(result.total_processed)}</strong>
+                  <strong>{formatNumber.format(result.total_records)}</strong>
                   <small>Registros leídos</small>
                 </article>
                 <article className="metric">
@@ -304,8 +374,13 @@ export default function IncidentsPage() {
                 </article>
                 <article className="metric">
                   <span>SATISFACCIÓN</span>
-                  <strong>{result.closed_case_satisfaction_avg === null ? "—" : result.closed_case_satisfaction_avg.toFixed(2)}</strong>
-                  <small>Media en casos cerrados · / 5</small>
+                  <strong>
+                    {satisfaction.average_score === null ? "—" : satisfaction.average_score.toFixed(2)}
+                  </strong>
+                  <small>
+                    Media / 5 · {formatNumber.format(satisfaction.scored_cases)} de{" "}
+                    {formatNumber.format(satisfaction.closed_cases)} cerrados con puntaje
+                  </small>
                 </article>
               </div>
 
@@ -314,25 +389,56 @@ export default function IncidentsPage() {
                   <div className="validation-header">
                     <div>
                       <p className="panel-kicker">VALIDACIÓN</p>
-                      <h3 id="invalid-title">Registros que requieren revisión</h3>
+                      <h3 id="invalid-title">
+                        El fichero contiene registros inválidos: requieren revisión
+                      </h3>
                     </div>
                     <strong>{formatNumber.format(result.invalid_records)}</strong>
                   </div>
                   <ul className="reason-list">
-                    {Object.entries(result.invalid_by_reason).map(([reason, count]) => (
-                      <li key={reason}><span>{formatReason(reason)}</span><strong>{count}</strong></li>
+                    {visibleRules(result.invalid_by_rule).map(([rule, count]) => (
+                      <li key={rule}>
+                        <span>{RULE_LABELS[rule] ?? rule}</span>
+                        <strong>{formatNumber.format(count)}</strong>
+                      </li>
                     ))}
                   </ul>
-                  <p className="row-list-label">Filas del fichero</p>
-                  <p className="row-list">
-                    {result.invalid_record_details.map((record) => `#${record.row_number}`).join(" · ")}
+                  <p className="row-list-label">
+                    Por privacidad no se muestran identificadores de pacientes ni datos de las filas.
+                    Un registro que incumple varias reglas se cuenta en cada una.
                   </p>
                 </section>
               )}
 
               <div className="breakdown-grid">
-                <Breakdown title="Por categoría" values={result.categories} emptyLabel="Sin categorías válidas." />
-                <Breakdown title="Por estado" values={result.states} emptyLabel="Sin estados válidos." />
+                <BreakdownTable
+                  title="Por categoría"
+                  rows={groupRows(result.categories, CATEGORY_LABELS)}
+                  emptyLabel="Sin categorías válidas."
+                  countHeader="Incidencias"
+                  percentHeader="% sobre válidos"
+                />
+                <BreakdownTable
+                  title="Por estado"
+                  rows={groupRows(result.statuses, STATUS_LABELS)}
+                  emptyLabel="Sin estados válidos."
+                  countHeader="Incidencias"
+                  percentHeader="% sobre válidos"
+                />
+                <BreakdownTable
+                  title="Por país"
+                  rows={groupRows(result.countries, COUNTRY_LABELS)}
+                  emptyLabel="Sin países válidos."
+                  countHeader="Incidencias"
+                  percentHeader="% sobre válidos"
+                />
+                <BreakdownTable
+                  title="Satisfacción (casos cerrados)"
+                  rows={scoreRows(satisfaction.score_distribution, satisfaction.scored_cases)}
+                  emptyLabel="Sin puntajes registrados."
+                  countHeader="Casos"
+                  percentHeader="% sobre puntuados"
+                />
               </div>
             </>
           ) : (

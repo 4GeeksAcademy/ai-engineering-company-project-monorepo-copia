@@ -13,12 +13,12 @@ latest_result: AnalysisResult | None = None
 @router.post("/analyze")
 async def analyze_incidents(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(None),
     current: dict = Depends(get_current_user),
 ) -> dict:
     global latest_result
 
-    if not file.filename:
+    if file is None or not file.filename:
         audit("incidents.analyze", "rejected", request, current["id"], "sin fichero")
         raise HTTPException(status_code=400, detail="Debes seleccionar un fichero CSV.")
     if not file.filename.lower().endswith(".csv"):
