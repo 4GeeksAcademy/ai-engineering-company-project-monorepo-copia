@@ -28,6 +28,31 @@ This repository is the **starter template** for transversal projects. You will w
 5. **Start implementing** in the right folder — do not dump everything in the root.
 6. **Document** what you add: each new app, service, agent, or pipeline gets a subfolder + README.
 
+## 🚀 Cómo ejecutar el Backend (API)
+
+Ejecuta estos pasos desde la raíz del repositorio, salvo que se indique lo contrario:
+
+1. Abre una terminal y navega a la carpeta de la API:
+	```bash
+	cd services/api
+	```
+2. Instala las dependencias del proyecto:
+	```bash
+	uv sync
+	```
+3. En la carpeta `services/api`, duplica `.env.example` y renombra la copia a `.env`:
+	```bash
+	cp .env.example .env
+	```
+4. Inicializa la base de datos desde la carpeta de la API. Esto creará localmente el archivo `db.json`:
+	```bash
+	python init_db.py
+	```
+5. Inicia el servidor de desarrollo:
+	```bash
+	uvicorn main:app --reload
+	```
+
 ---
 
 ## How to think about this monorepo
