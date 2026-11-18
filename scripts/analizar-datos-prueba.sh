@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CSV="$ROOT/scripts/incidents-HEALTHCORE-datos-prueba.csv"
+CSV="$ROOT/scripts/incidents-healthcore.csv"
 PYTHON="$ROOT/services/api/.venv/bin/python"
 
 if [[ ! -x "$PYTHON" ]]; then
