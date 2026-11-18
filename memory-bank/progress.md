@@ -64,9 +64,11 @@
 
 - Los 401 de rutas protegidas se auditan (`auth.access` / `denied`) en `services/api/src/api/core/deps.py`; verificado por HTTP.
 - Backoffice: login (`/auth/login`) con token solo en memoria, cabecera Bearer en análisis y exportación, botón "Cerrar sesión", reescritura `/auth/:path*` en `next.config.ts`. Build de Next.js compilado sin errores.
+- Prueba end-to-end del login a través de la reescritura de Next.js: 200 con credenciales válidas, 401 con inválidas, análisis y exportación 200 con token, 401 sin token. Las reescrituras se fijan al compilar (`next build`), por lo que `HEALTHCORE_API_URL` debe estar definido en el build.
+
+### Decisiones
+- Roles: `admin` y `user` acceden a incidencias y registros; basta con token válido (sin autorización por rol adicional).
+- Catálogo: sin catálogo oficial; se mantienen las 5 categorías actuales.
 
 ### Pendiente
-- Autorización por rol (requiere decisión: qué roles acceden a incidencias y registros).
-- HTTPS/transporte (requiere despliegue y aprobación de Cumplimiento).
-- Catálogo oficial de categorías y valores de referencia (se mantienen 5 categorías).
-- Prueba end-to-end del login desde el navegador a través de la reescritura de Next.js (pendiente).
+- HTTPS/transporte: pendiente hasta el despliegue y la aprobación de Cumplimiento.
