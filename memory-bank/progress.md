@@ -80,3 +80,8 @@
 - Registrado un usuario de prueba en la base local y verificado el login.
 - Prueba manual en backoffice (localhost:3000): login correcto y análisis de `scripts/incidents-HEALTHCORE.csv` con 100 registros leídos, 100 válidos, 0 inválidos.
 - `POST /users` restringido a rol `admin` (router y README actualizados), aprobado por el desarrollador.
+- Verificado `POST /users`: 403 con token de rol `user`, 201 con token de `admin` (usuario temporal borrado después, 204).
+- Contraseña de `tatiana1986@correo.com` cambiada en la base local.
+- `.env` antiguo de `42eb0ba` aceptado por el desarrollador (sin reescribir historial).
+- Eliminado `docs/confirmacion_healthcore.pdf` (documento ficticio, no es aprobación).
+- Sección "Alcance y seguridad" de `services/api/README.md` corregida: sin aprobación de Cumplimiento registrada y HTTPS no implementado.
