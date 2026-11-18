@@ -7,12 +7,11 @@
 - Rutas FastAPI `POST /api/incidents/analyze` y `GET /api/incidents/results/export`; exportan solo métricas agregadas.
 - Retirados `services/api/app.py` (Flask) y `uis/backoffice/app.py` (Streamlit); nuevo frontend Next.js en `uis/backoffice`.
 - Middleware CORS restaurado en `services/api/src/api/main.py` solo para `http://localhost:3000`.
-- `scripts/incidents-HEALTHCORE-datos-prueba.csv` con 100 filas (5 reales + 95 ficticias, solo pruebas) y `scripts/analizar-datos-prueba.sh` para ejecutarlo.
+- `scripts/incidents-HEALTHCORE.csv` ahora contiene los 100 registros de prueba; `scripts/incidents-HEALTHCORE-datos-prueba.csv` es una copia y `scripts/analizar-datos-prueba.sh` lo ejecuta.
 - README de la API actualizado con alcance, datos de prueba y exportación.
 
 ### Pendiente
 - Confirmar catálogo de categorías y valores de referencia del briefing.
-- Sustituir las 95 filas ficticias por datos reales cuando estén disponibles.
 - Validar y confirmar el commit con el desarrollador.
 
 ## Fecha: 17 de Noviembre, 2026

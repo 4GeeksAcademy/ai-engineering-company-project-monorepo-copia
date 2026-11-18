@@ -39,6 +39,6 @@ Los datos originales del fichero no se guardan ni se incluyen en el CSV exportad
 
 ## Alcance y seguridad
 
-`scripts/incidents-HEALTHCORE.csv` contiene 5 registros reales de ejemplo. `scripts/incidents-HEALTHCORE-datos-prueba.csv` contiene 100 registros, pero 95 de ellos son ficticios y solo sirven para pruebas. El briefing de HealthCore no define un catálogo de categorías ni valores esperados para incidencias; por ahora, las categorías válidas se toman de las cinco categorías presentes en los CSV. Confirma ese catálogo y los valores de referencia antes de usar datos de producción.
+`scripts/incidents-HEALTHCORE.csv` y `scripts/incidents-HEALTHCORE-datos-prueba.csv` contienen los mismos 100 registros de prueba. El briefing de HealthCore no define un catálogo de categorías ni valores esperados para incidencias; por ahora, las categorías válidas se toman de las cinco categorías presentes en los CSV. Confirma ese catálogo y los valores de referencia antes de usar datos de producción.
 
 Este prototipo no implementa autenticación, autorización ni auditoría de acceso. Mantén el backend ligado a `127.0.0.1` y no lo expongas ni proceses datos reales sensibles hasta integrar esos controles y el transporte/despliegue aprobados por Cumplimiento.
