@@ -62,8 +62,11 @@
 - Verificación HTTP en copia temporal: 401 sin token, 200 con token, 404 export sin análisis, `/records` protegido, auditoría correcta, sin trazas en servidor.
 - Rama nueva `feature/agent-memory-bank-v2` desde `main`; la rama antigua `feature/agent-memory-bank` no se modificó.
 
+- Los 401 de rutas protegidas se auditan (`auth.access` / `denied`) en `services/api/src/api/core/deps.py`; verificado por HTTP.
+- Backoffice: login (`/auth/login`) con token solo en memoria, cabecera Bearer en análisis y exportación, botón "Cerrar sesión", reescritura `/auth/:path*` en `next.config.ts`. Build de Next.js compilado sin errores.
+
 ### Pendiente
-- El frontend `uis/backoffice` no envía token: sus llamadas a `/api/incidents` devolverán 401 hasta añadir login.
-- Autorización por rol y HTTPS/transporte: no implementados.
-- Los 401 de rutas protegidas no se auditan (la dependencia rechaza antes del handler).
-- Catálogo oficial de categorías y valores de referencia.
+- Autorización por rol (requiere decisión: qué roles acceden a incidencias y registros).
+- HTTPS/transporte (requiere despliegue y aprobación de Cumplimiento).
+- Catálogo oficial de categorías y valores de referencia (se mantienen 5 categorías).
+- Prueba end-to-end del login desde el navegador a través de la reescritura de Next.js (pendiente).

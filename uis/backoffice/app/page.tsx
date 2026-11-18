@@ -80,6 +80,56 @@ export default function IncidentsPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [token, setToken] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoginError("");
+    setIsLoggingIn(true);
+    try {
+      const response = await fetch("/auth/login", {
+        method: "POST",
+        body: new URLSearchParams({ username: email, password }),
+      });
+      if (!response.ok) {
+        throw new Error("Email o contraseña incorrectos.");
+      }
+      const payload = await response.json();
+      setToken(payload.access_token as string);
+      setPassword("");
+    } catch (requestError) {
+      setLoginError(
+        requestError instanceof Error ? requestError.message : "No se pudo iniciar sesión.",
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }
+
+  async function handleExport() {
+    const response = await fetch("/api/incidents/results/export", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (response.status === 401) {
+      setLoginError("Tu sesión ha caducado. Vuelve a iniciar sesión.");
+      setToken("");
+      return;
+    }
+    if (!response.ok) {
+      setError("No se pudo exportar el resultado.");
+      return;
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "resultados_healthcore.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -96,8 +146,14 @@ export default function IncidentsPage() {
     try {
       const response = await fetch("/api/incidents/analyze", {
         method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+      if (response.status === 401) {
+        setLoginError("Tu sesión ha caducado. Vuelve a iniciar sesión.");
+        setToken("");
+        return;
+      }
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload.detail ?? "No se pudo analizar el fichero.");
@@ -114,6 +170,41 @@ export default function IncidentsPage() {
     }
   }
 
+  if (!token) {
+    return (
+      <main className="workspace">
+        <section className="page-heading" aria-labelledby="login-title">
+          <p className="eyebrow">ACCESO RESTRINGIDO <span>/</span> HEALTHCORE</p>
+          <h1 id="login-title">Iniciar sesión</h1>
+        </section>
+        <form className="upload-panel" onSubmit={handleLogin}>
+          <label htmlFor="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            autoComplete="username"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          <label htmlFor="login-password">Contraseña</label>
+          <input
+            id="login-password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <button className="primary-button" type="submit" disabled={isLoggingIn}>
+            {isLoggingIn ? "Entrando…" : "Entrar"}
+          </button>
+          {loginError && <p className="error-message" role="alert">{loginError}</p>}
+        </form>
+      </main>
+    );
+  }
+
   return (
     <main className="workspace">
       <header className="topbar">
@@ -124,6 +215,9 @@ export default function IncidentsPage() {
         <div className="topbar-context">
           <span className="status-dot" aria-hidden="true" />
           OPERACIONES INTERNAS
+          <button type="button" onClick={() => { setToken(""); setResult(null); }}>
+            Cerrar sesión
+          </button>
         </div>
       </header>
 
@@ -187,9 +281,9 @@ export default function IncidentsPage() {
                   <div className="panel-kicker"><span>02</span> RESUMEN DEL ANÁLISIS</div>
                   <h2>Resultados</h2>
                 </div>
-                <a className="export-link" href="/api/incidents/results/export">
+                <button className="export-link" type="button" onClick={handleExport}>
                   <span aria-hidden="true">↓</span> Exportar CSV
-                </a>
+                </button>
               </div>
 
               <div className="metric-grid">
