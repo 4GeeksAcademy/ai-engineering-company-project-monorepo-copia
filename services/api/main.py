@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routes.auth import router as auth_router
+from routes.profiles import router as profiles_router
 from routes.suppliers import router as suppliers_router
+from routes.users import router as users_router
 
 app = FastAPI(title="HealthCore Supplier Directory API")
 
@@ -13,6 +16,9 @@ app.add_middleware(
 )
 
 app.include_router(suppliers_router)
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(profiles_router)
 
 @app.get("/")
 def root():
