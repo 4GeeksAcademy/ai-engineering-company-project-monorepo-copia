@@ -44,16 +44,59 @@ Ejecuta estos pasos desde la raíz del repositorio, salvo que se indique lo cont
 	```bash
 	cp .env.example .env
 	```
-4. Inicializa la base de datos desde la carpeta de la API. Esto creará localmente el archivo `db.json`:
+4. Genera una clave secreta y pégala como valor de `SECRET_KEY` en el archivo `.env` (sin espacios ni comillas):
 	```bash
-	python init_db.py
+	openssl rand -hex 32
 	```
-5. Inicia el servidor de desarrollo:
+	Las otras variables (`ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`) pueden quedar como están. El archivo `.env` no se sube a GitHub.
+5. Inicializa la base de datos. Esto creará localmente el archivo `db.json`:
 	```bash
-	uvicorn main:app --reload
+	uv run python init_db.py
 	```
+6. Inicia el servidor de desarrollo:
+	```bash
+	uv run uvicorn main:app --reload
+	```
+7. Abre `/docs` en el navegador para probar la API.
 
----
+### 🔐 Autenticación (AUTH-01)
+
+La API usa autenticación JWT stateless. `User` y `Profile` se guardan solo en TinyDB (`db.json`) y las contraseñas se almacenan con hash bcrypt.
+
+**Variables de entorno** (`services/api/.env`):
+
+| Variable | Descripción |
+| --- | --- |
+| `SECRET_KEY` | Clave para firmar los tokens (obligatoria) |
+| `ALGORITHM` | Algoritmo de firma (por defecto `HS256`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Minutos de vida del token (por defecto `30`) |
+
+**Rutas públicas**
+
+- `GET /`: estado de la API.
+- `POST /users`: registro (crea el usuario y su perfil con rol `user`; acepta `name`, `phone` y `address` opcionales).
+- `POST /auth/login`: devuelve el token JWT (el campo `username` recibe el email).
+
+**Rutas protegidas** (requieren `Authorization: Bearer <token>`)
+
+- `GET /auth/me`: email, rol y perfil del usuario autenticado.
+- `GET /users` (solo admin), `GET /users/{id}`, `PUT /users/{id}`, `DELETE /users/{id}`.
+- `GET /profiles/me` y `PUT /profiles/me`.
+- `POST /suppliers`, `GET /suppliers`, `GET /suppliers/{id}`, `PATCH /suppliers/{id}/rate`, `PATCH /suppliers/{id}/status` y `DELETE /suppliers/{id}`.
+
+**Códigos de respuesta**
+
+- `401`: sin token, token inválido o expirado.
+- `403`: el usuario intenta acceder o modificar recursos de otro usuario.
+- `409`: el email ya está registrado.
+
+**Cómo probarla en `/docs`**
+
+1. `POST /users` para registrarte.
+2. Pulsa **Authorize** y escribe tu email en `username` y tu contraseña en `password`.
+3. Prueba `GET /auth/me` y `GET /suppliers`.
+
+**Probar rutas de admin:** el registro siempre crea rol `user`. Para probar rutas de admin, cambia manualmente `"role"` a `"admin"` en `services/api/db.json`.
 
 ## How to think about this monorepo
 
