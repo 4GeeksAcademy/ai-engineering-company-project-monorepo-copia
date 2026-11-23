@@ -1,0 +1,55 @@
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi.responses import Response
+
+from api.core.audit import audit
+from api.incidents.analysis import AnalysisResult, CSVAnalysisError, analyze_csv
+
+
+router = APIRouter(prefix="/api/incidents", tags=["incidents"])
+latest_result: AnalysisResult | None = None
+ANON = "anonymous"
+
+
+@router.post("/analyze")
+async def analyze_incidents(
+    request: Request,
+    file: UploadFile | None = File(None),
+) -> dict:
+    global latest_result
+
+    if file is None or not file.filename:
+        audit("incidents.analyze", "rejected", request, ANON, "sin fichero")
+        raise HTTPException(status_code=400, detail="Debes seleccionar un fichero CSV.")
+    if not file.filename.lower().endswith(".csv"):
+        audit("incidents.analyze", "rejected", request, ANON, "extension no valida")
+        raise HTTPException(status_code=400, detail="El fichero debe tener extensión .csv.")
+
+    content = await file.read()
+    try:
+        result = analyze_csv(content)
+    except CSVAnalysisError as error:
+        audit("incidents.analyze", "rejected", request, ANON, "CSV no valido")
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    finally:
+        await file.close()
+
+    latest_result = result
+    audit("incidents.analyze", "success", request, ANON)
+    return result.to_dict()
+
+
+@router.get("/results/export")
+def export_results(request: Request) -> Response:
+    if latest_result is None:
+        audit("incidents.export", "not_found", request, ANON)
+        raise HTTPException(
+            status_code=404,
+            detail="Todavía no hay resultados. Analiza un CSV primero.",
+        )
+
+    audit("incidents.export", "success", request, ANON)
+    return Response(
+        content=latest_result.to_csv(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="resultados_healthcore.csv"'},
+    )
