@@ -1,26 +1,38 @@
-# HealthCore Backoffice
+# Backoffice de HealthCore
 
-Interfaz Next.js para cargar CSV de incidencias, consultar el resumen y descargar las métricas agregadas.
+Interfaz web (Next.js) para analizar el fichero de incidencias: se sube el CSV, se ve el resumen en pantalla y se exportan los resultados. **No requiere inicio de sesión.**
 
 ## Requisitos
 
 - Node.js 20 o posterior
-- API HealthCore ejecutándose en `http://127.0.0.1:8000` (ver [services/api/README.md](../../services/api/README.md))
+- La API en marcha (ver `services/api/README.md`)
 
-## Arranque desde cero
+## Arranque
 
-```bash
-cd uis/backoffice
-cp .env.example .env.local
-npm install
-npm run dev
-```
+1. Arranca primero la API, en el puerto 8000:
 
-Abre `http://localhost:3000`. La variable `HEALTHCORE_API_URL` apunta al backend y la configuración de Next.js reenvía `/api/*` a ese servicio, sin requerir CORS en el navegador.
+   ```bash
+   cd services/api
+   python3 -m venv .venv
+   source .venv/bin/activate
+   python -m pip install -e .
+   python -m uvicorn api.main:app --app-dir src --host 127.0.0.1 --port 8000
+   ```
 
-Para validar una compilación de producción:
+2. En otra terminal, arranca el backoffice:
 
-```bash
-npm run build
-npm run start
-```
+   ```bash
+   cd uis/backoffice
+   npm install
+   npm run dev
+   ```
+
+3. Abre `http://localhost:3000`, pulsa **Seleccionar fichero CSV**, elige `scripts/incidents-healthcore.csv` y pulsa **Analizar fichero**. Con ese fichero debe verse: 100 procesados, 94 válidos, 6 inválidos y satisfacción media 3.58. El botón **Exportar CSV** descarga las métricas.
+
+## Configuración
+
+No hay variables obligatorias. Si la API no está en `http://127.0.0.1:8000`, copia `.env.example` a `.env.local` y cambia `HEALTHCORE_API_URL`.
+
+## Privacidad
+
+La pantalla y el CSV exportado solo muestran métricas agregadas. Nunca aparecen identificadores de pacientes.
