@@ -17,17 +17,29 @@ This project implements the supplier directory for the HealthCore clinic network
 - Node.js 18+ and npm installed.
 
 ### 1. Backend (FastAPI + TinyDB)
-From the root of the repository, run:
+From the repository root, run:
 
 ```bash
-# 1. Install backend dependencies
+# Install backend dependencies, seed the database, and start the API
+cd services/api
 uv sync
+uv run seed
+uv run fastapi dev main.py
+```
 
-# 2. Populate the database with initial data (Seeder)
-uv run python services/api/seed.py
+The seed command is idempotent: it does not add duplicates when the database already contains the 15 suppliers.
+The API runs at `http://localhost:8000`; interactive documentation is available at `http://localhost:8000/docs`.
 
-# 3. Start the development server
-uv run fastapi dev services/api/main.py
+### 2. Frontend (Next.js)
+In a separate terminal, from the repository root, run:
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev
+```
+
+The frontend runs at `http://localhost:3000`. Keep the API running on port `8000`. The frontend reads `NEXT_PUBLIC_API_URL`, which defaults to `http://localhost:8000`; CORS is enabled.
 ## Purpose
 
 This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).
