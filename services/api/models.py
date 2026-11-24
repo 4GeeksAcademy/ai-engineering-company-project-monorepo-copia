@@ -1,36 +1,50 @@
-# services/api/models.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from typing import List, Optional, Literal
 from datetime import datetime
-from enum import Enum
-from typing import List
 
-# 1. Enums (Valores permitidos)
-class SupplierStatus(str, Enum):
-    active = "active"
-    suspended = "suspended"
+VALID_CATEGORIES = [
+    "medical_supplies", "laboratory_services", "pharmaceutical",
+    "clinical_software", "it_infrastructure", "hr_and_payroll_software",
+    "cleaning_and_facilities", "patient_communication",
+    "billing_and_coding_software", "training_platforms"
+]
 
-class SupplierCategory(str, Enum):
-    medical_equipment = "Medical Equipment"
-    ppe = "PPE"
-    pharmaceuticals = "Pharmaceuticals"
-    lab_supplies = "Lab Supplies"
+class SupplierBase(BaseModel):
+    name: str
+    country: Literal["USA", "UK"]
+    categories: List[str] = Field(..., min_length=1)
+    monthly_rate: float = Field(..., gt=0)
+    currency: Literal["USD", "GBP"]
+    status: Literal["active", "suspended"]
+    compliance_agreement: Optional[Literal["BAA", "DPA", "both"]] = None
+    contract_renewal_date: Optional[str] = None
+    contact_email: Optional[EmailStr] = None
+    notes: Optional[str] = None
 
-# 2. Modelo para crear un proveedor (POST)
-class SupplierCreate(BaseModel):
-    name: str = Field(..., min_length=2, description="Nombre del proveedor")
-    country: str = Field(..., pattern="^(USA|UK)$", description="Debe ser USA o UK")
-    product_categories: List[SupplierCategory] = Field(..., min_items=1)
-    rate: float = Field(..., gt=0, description="La tarifa debe ser mayor a 0")
-    status: SupplierStatus = Field(default=SupplierStatus.active)
+    @field_validator('categories')
+    def validate_categories(cls, v):
+        for cat in v:
+            if cat not in VALID_CATEGORIES:
+                raise ValueError(f"Categoría no válida: {cat}")
+        return v
 
-# 3. Modelo completo (Lo que se guarda en TinyDB)
-class Supplier(SupplierCreate):
-    id: str
+    @model_validator(mode='after')
+    def check_country_currency(self):
+        if self.country == "USA" and self.currency != "USD":
+            raise ValueError("Proveedores de USA deben tener currency = USD")
+        if self.country == "UK" and self.currency != "GBP":
+            raise ValueError("Proveedores de UK deben tener currency = GBP")
+        return self
+
+class SupplierCreate(SupplierBase):
+    pass
+
+class SupplierResponse(SupplierBase):
+    id: int
     updated_at: datetime
 
-# 4. Modelos para actualizaciones parciales (PATCH)
-class SupplierRateUpdate(BaseModel):
-    rate: float = Field(..., gt=0, description="La tarifa debe ser mayor a 0")
+class RateUpdate(BaseModel):
+    monthly_rate: float = Field(..., gt=0)
 
-class SupplierStatusUpdate(BaseModel):
-    status: SupplierStatus
+class StatusUpdate(BaseModel):
+    status: Literal["active", "suspended"]

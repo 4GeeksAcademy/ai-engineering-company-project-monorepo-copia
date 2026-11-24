@@ -9,6 +9,27 @@ _These instructions are also available in [English](./README.md)._
 
 ---
 
+## 🏥 Directorio de Proveedores HealthCore — Instrucciones de ejecución
+
+Este proyecto implementa el directorio de proveedores para la red de clínicas HealthCore. A continuación se detalla cómo ejecutar tanto el backend como el frontend.
+
+### ⚙️ Requisitos previos
+- Python 3.10+ y [uv](https://github.com/astral-sh/uv) instalado.
+- Node.js 18+ y npm instalados.
+
+### 1. Backend (FastAPI + TinyDB)
+Desde la raíz del repositorio, ejecuta:
+
+```bash
+# 1. Instalar dependencias del backend
+uv sync
+
+# 2. Poblar la base de datos con los datos iniciales (Seeder)
+uv run python services/api/seed.py
+
+# 3. Levantar el servidor de desarrollo
+uv run fastapi dev services/api/main.py
+
 ## Propósito
 
 Este repositorio es la **plantilla de inicio** para los proyectos transversales. Trabajarás con escenarios de empresas reales (Brasaland, TrackFlow, Nexova) construyendo entregables que se corresponden con los hitos del curso (Web, Programación, Backend, Telemetría, RAG, Agentes, Workflows, Tiempo real).
