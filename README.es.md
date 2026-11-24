@@ -21,14 +21,26 @@ Este proyecto implementa el directorio de proveedores para la red de clínicas H
 Desde la raíz del repositorio, ejecuta:
 
 ```bash
-# 1. Instalar dependencias del backend
+# Instalar dependencias, poblar la base de datos e iniciar la API
+cd services/api
 uv sync
+uv run seed
+uv run fastapi dev main.py
+```
 
-# 2. Poblar la base de datos con los datos iniciales (Seeder)
-uv run python services/api/seed.py
+El comando de seed es idempotente: no duplica los datos si la base ya contiene los 15 proveedores.
+La API estará disponible en `http://localhost:8000`; la documentación interactiva está en `http://localhost:8000/docs`.
 
-# 3. Levantar el servidor de desarrollo
-uv run fastapi dev services/api/main.py
+### 2. Frontend (Next.js)
+En otra terminal, desde la raíz del repositorio, ejecuta:
+
+```bash
+cd uis/backoffice
+npm install
+npm run dev
+```
+
+El frontend estará disponible en `http://localhost:3000`. Mantén la API en ejecución en el puerto `8000`. El frontend usa `NEXT_PUBLIC_API_URL`, cuyo valor predeterminado es `http://localhost:8000`; CORS está habilitado.
 
 ## Propósito
 
