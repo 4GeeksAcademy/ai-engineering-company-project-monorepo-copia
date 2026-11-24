@@ -8,7 +8,26 @@ _Base template for transversal projects in the AI Engineering Career Program —
 _Estas instrucciones tambien estan disponibles en [espanol](./README.es.md)._
 
 ---
+## 🏥 HealthCore Supplier Directory — Execution Instructions
 
+This project implements the supplier directory for the HealthCore clinic network. Below are the details on how to run both the backend and the frontend.
+
+### ⚙️ Prerequisites
+- Python 3.10+ and [uv](https://github.com/astral-sh/uv) installed.
+- Node.js 18+ and npm installed.
+
+### 1. Backend (FastAPI + TinyDB)
+From the root of the repository, run:
+
+```bash
+# 1. Install backend dependencies
+uv sync
+
+# 2. Populate the database with initial data (Seeder)
+uv run python services/api/seed.py
+
+# 3. Start the development server
+uv run fastapi dev services/api/main.py
 ## Purpose
 
 This repository is the **starter template** for transversal projects. You will work on real company scenarios (Brasaland, TrackFlow, Nexova), building deliverables that map to course milestones (Web, Programming, Backend, Telemetry, RAG, Agents, Workflows, Real-time).

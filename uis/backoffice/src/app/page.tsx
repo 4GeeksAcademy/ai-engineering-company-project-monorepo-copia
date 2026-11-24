@@ -13,7 +13,9 @@ type Supplier = {
   status: "active" | "suspended";
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+type Country = Supplier["country"];
+
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 const CATEGORIES = [
   "medical_supplies",
   "laboratory_services",
@@ -30,15 +32,25 @@ const CATEGORIES = [
 const categoryLabel = (category: string) =>
   category.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 
+const fetchErrorMessage = (cause: unknown) => {
+  if (cause instanceof TypeError) {
+    return `No se pudo acceder a ${API_URL}. Comprueba que la API esté activa, que NEXT_PUBLIC_API_URL sea accesible desde el navegador y que CORS esté habilitado.`;
+  }
+  return cause instanceof Error ? cause.message : "No se pudo conectar con la API.";
+};
+
 export default function Home() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [country, setCountry] = useState("");
   const [category, setCategory] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [newSupplierCountry, setNewSupplierCountry] = useState<Country>("USA");
 
   const loadSuppliers = useCallback(async () => {
     setError("");
+    setLoading(true);
     const params = new URLSearchParams();
     if (country) params.set("country", country);
     if (category) params.set("category", category);
@@ -48,7 +60,9 @@ export default function Home() {
       setSuppliers(await response.json());
       setError("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo conectar con la API.");
+      setError(fetchErrorMessage(cause));
+    } finally {
+      setLoading(false);
     }
   }, [country, category]);
 
@@ -74,7 +88,7 @@ export default function Home() {
       if (!response.ok) throw new Error(data.detail ?? "No se pudo actualizar el proveedor.");
       await loadSuppliers();
     } catch (cause) {
-      window.alert(cause instanceof Error ? cause.message : "Error de conexión con la API.");
+      window.alert(fetchErrorMessage(cause));
     }
   }
 
@@ -99,13 +113,13 @@ export default function Home() {
     setSaving(true);
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const selectedCountry = String(form.get("country"));
+    const selectedCountry = String(form.get("country")) as Country;
     const payload = {
       name: String(form.get("name")).trim(),
       country: selectedCountry,
       categories: [String(form.get("categories"))],
       monthly_rate: Number(form.get("monthly_rate")),
-      currency: String(form.get("currency")),
+      currency: selectedCountry === "USA" ? "USD" : "GBP",
       status: "active",
       compliance_agreement: null,
       contract_renewal_date: null,
@@ -126,10 +140,11 @@ export default function Home() {
         throw new Error(detail ?? "No se pudo crear el proveedor.");
       }
       formElement.reset();
+      setNewSupplierCountry("USA");
       await loadSuppliers();
       window.alert("Proveedor registrado correctamente.");
     } catch (cause) {
-      window.alert(cause instanceof Error ? cause.message : "Error de conexión con la API.");
+      window.alert(fetchErrorMessage(cause));
     } finally {
       setSaving(false);
     }
@@ -188,7 +203,7 @@ export default function Home() {
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th className="px-5 py-3.5">Proveedor</th><th className="px-4 py-3.5">País</th><th className="px-4 py-3.5">Categorías</th><th className="px-4 py-3.5">Tarifa mensual</th><th className="px-4 py-3.5">Cumplimiento</th><th className="px-4 py-3.5">Estado</th><th className="px-5 py-3.5">Acciones</th></tr></thead>
               <tbody className="divide-y divide-slate-100">
-                {suppliers.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">No hay proveedores que coincidan con estos filtros.</td></tr> : suppliers.map((supplier) => (
+                {loading ? <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">Cargando proveedores…</td></tr> : suppliers.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-slate-500">No hay proveedores que coincidan con estos filtros.</td></tr> : suppliers.map((supplier) => (
                   <tr key={supplier.id} className={supplier.status === "suspended" ? "bg-rose-50/80 text-slate-500" : "hover:bg-slate-50/70"}>
                     <td className="px-5 py-4"><span className={`font-semibold ${supplier.status === "suspended" ? "line-through decoration-rose-400" : "text-slate-800"}`}>{supplier.name}</span><span className="mt-1 block text-xs text-slate-400">ID #{supplier.id}</span></td>
                     <td className="px-4 py-4">{supplier.country === "USA" ? "🇺🇸 USA" : "🇬🇧 UK"}</td>
@@ -209,10 +224,10 @@ export default function Home() {
           <div className="mb-5"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">Nuevo registro</p><h3 className="mt-1 text-xl font-bold">Añadir proveedor</h3><p className="mt-1 text-sm text-slate-500">La moneda debe coincidir con el país (USA: USD, UK: GBP).</p></div>
           <form onSubmit={createSupplier} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <label className="text-sm font-medium text-slate-700">Nombre<input name="name" required maxLength={120} placeholder="Nombre de la empresa" className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label>
-            <label className="text-sm font-medium text-slate-700">País<select name="country" required defaultValue="USA" className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none focus:border-teal-600"><option value="USA">Estados Unidos</option><option value="UK">Reino Unido</option></select></label>
+            <label className="text-sm font-medium text-slate-700">País<select name="country" required value={newSupplierCountry} onChange={(event) => setNewSupplierCountry(event.target.value as Country)} className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none focus:border-teal-600"><option value="USA">Estados Unidos</option><option value="UK">Reino Unido</option></select></label>
             <label className="text-sm font-medium text-slate-700">Categoría<select name="categories" required defaultValue="medical_supplies" className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none focus:border-teal-600">{CATEGORIES.map((item) => <option key={item} value={item}>{categoryLabel(item)}</option>)}</select></label>
             <label className="text-sm font-medium text-slate-700">Tarifa mensual<input name="monthly_rate" type="number" min="0.01" step="0.01" required placeholder="0.00" className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2.5 font-normal outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" /></label>
-            <label className="text-sm font-medium text-slate-700">Moneda<select name="currency" required defaultValue="USD" className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-normal outline-none focus:border-teal-600"><option value="USD">USD · Dólar</option><option value="GBP">GBP · Libra</option></select></label>
+            <div className="text-sm font-medium text-slate-700">Moneda<div className="mt-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 font-normal text-slate-600" aria-live="polite">{newSupplierCountry === "USA" ? "USD · Dólar" : "GBP · Libra"}</div></div>
             <div className="sm:col-span-2 lg:col-span-5"><button type="submit" disabled={saving} className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60">{saving ? "Guardando…" : "+ Registrar proveedor"}</button></div>
           </form>
         </section>

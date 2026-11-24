@@ -30,3 +30,6 @@ def main():
         suppliers_table.insert(supplier)
     
     print(f"✅ Se insertaron {len(SUPPLIERS_SEED)} proveedores exitosamente.")
+
+if __name__ == "__main__":
+    main()
