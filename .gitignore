@@ -1,1 +1,14 @@
 healthcore_db.json
+node_modules/
+
+# Exportaciones del análisis de incidencias
+results.csv
+resultados_guardados.csv
+
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.next/
+audit.log
+results.csv

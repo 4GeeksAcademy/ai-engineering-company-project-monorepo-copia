@@ -1,19 +1,34 @@
 [project]
 name = "healthcore-suppliers-api"
 version = "0.1.0"
-requires-python = ">=3.10"
+description = "HealthCore supplier and incident analysis API"
+readme = "README.md"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.110.0",
     "uvicorn>=0.29.0",
     "tinydb>=4.8.0",
     "pydantic>=2.6.0",
     "email-validator>=2.1.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
 seed = "seed:main"
-[tool.uv]
-package = true
+api = "api.main:app"
+
+[dependency-groups]
+dev = ["httpx>=0.27"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["database", "seed"]
+
+[tool.setuptools.package-dir]
+api = "src/api"
+
+[tool.setuptools.packages.find]
+where = ["src"]
