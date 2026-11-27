@@ -1,14 +1,35 @@
-healthcore_db.json
+# Dependencias
 node_modules/
 
-# Exportaciones del análisis de incidencias
-results.csv
-resultados_guardados.csv
-
+# Python
 __pycache__/
 *.pyc
 .venv/
-node_modules/
+*.egg-info/
+.pytest_cache/
+
+# Next.js / frontend
 .next/
+out/
+build/
+dist/
+
+# Entorno y secretos
+.env
+.env.local
+
+# Logs
+*.log
 audit.log
+
+# Bases de datos locales
+healthcore_db.json
+db.json
+
+# Resultados de análisis
 results.csv
+resultados_guardados.csv
+
+# SO
+.DS_Store
+Thumbs.db
