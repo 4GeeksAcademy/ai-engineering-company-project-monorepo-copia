@@ -1,5 +1,20 @@
 # Progress Log
 
+## Fecha: 27 de Noviembre, 2026
+
+### Completado
+- Limpieza de archivos indebidos en el monorepo (commit `076f1c2` y siguientes):
+  - Removidos del tracking 12 archivos generados: `services/api/__pycache__/*.pyc` (6) y `services/api/healthcore_suppliers_api.egg-info/*` (6). Siguen en disco, fuera de Git.
+  - `.gitignore` raíz reescrito completo: `node_modules/`, `__pycache__/`, `*.pyc`, `.venv/`, `*.egg-info/`, `.next/`, `build/`, `dist/`, `.env`, logs, `.DS_Store`. Se eliminaron líneas duplicadas y un carácter corrupto ("anǭlisis").
+  - `services/api/.gitignore` limpiado (`__pycache__/` duplicado) y con `*.egg-info/`.
+  - `services/api/db.json` fuera del tracking (`git rm --cached`): es regenerable con `uv run seed` y ya estaba en su `.gitignore`; la decisión constaba en este archivo pero se perdió al mergear. El archivo local se conserva.
+  - `uis/backoffice/.gitignore`: añadido `!.env.example` para que la plantilla de ejemplo no quede atrapada por `.env*`.
+- Verificado en GitHub: el árbol de `main` no contiene `node_modules`, `__pycache__`, `egg-info`, `.pyc` ni `.venv` (árbol completo, no truncado).
+- Decisión: **no reescribir historial** para purgar los ~598 blobs de `node_modules` heredados del upstream. Repo de 15 MiB (límite GitHub 1 GB); el `--force push` rompería clones, Codespaces y ramas abiertas. Reevaluar si el repo supera ~500 MB.
+
+### Pendiente
+- Validar y confirmar los commits con el desarrollador (hecho: aprobación "sí" del desarrollador para db.json + .env.example).
+
 ## Fecha: 18 de Noviembre, 2026
 
 ### Completado
